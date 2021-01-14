@@ -1,6 +1,7 @@
 # Mask R-CNN for Object Detection and Segmentation (CHANGES)
 
 Generate a metrics.csv file with accuracy and loss for each epoch
+Can train a coco dataset without a pretrained model
 
 # Mask R-CNN for Object Detection and Segmentation (ORIGINAL)
 

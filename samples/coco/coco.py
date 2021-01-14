@@ -412,7 +412,8 @@ if __name__ == '__main__':
                         default=DEFAULT_DATASET_YEAR,
                         metavar="<year>",
                         help='Year of the MS-COCO dataset (2014 or 2017) (default=2014)')
-    parser.add_argument('--model', required=True,
+    parser.add_argument('--model', required=False,
+                        default=None,
                         metavar="/path/to/weights.h5",
                         help="Path to weights .h5 file or 'coco'")
     parser.add_argument('--logs', required=False,
@@ -457,21 +458,22 @@ if __name__ == '__main__':
         model = modellib.MaskRCNN(mode="inference", config=config,
                                   model_dir=args.logs)
 
-    # Select weights file to load
-    if args.model.lower() == "coco":
-        model_path = COCO_MODEL_PATH
-    elif args.model.lower() == "last":
-        # Find last trained weights
-        model_path = model.find_last()
-    elif args.model.lower() == "imagenet":
-        # Start from ImageNet trained weights
-        model_path = model.get_imagenet_weights()
-    else:
-        model_path = args.model
+    if args.model != None:
+        # Select weights file to load
+        if args.model.lower() == "coco":
+            model_path = COCO_MODEL_PATH
+        elif args.model.lower() == "last":
+            # Find last trained weights
+            model_path = model.find_last()
+        elif args.model.lower() == "imagenet":
+            # Start from ImageNet trained weights
+            model_path = model.get_imagenet_weights()
+        else:
+            model_path = args.model
 
-    # Load weights
-    print("Loading weights ", model_path)
-    model.load_weights(model_path, by_name=True)
+        # Load weights
+        print("Loading weights ", model_path)
+        model.load_weights(model_path, by_name=True)
 
     # Train or evaluate
     if args.command == "train":
