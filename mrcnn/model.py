@@ -50,7 +50,7 @@ class CallbackHistory(Callback):
             data_writer.writerow(headers)
 
     def on_epoch_end(self, batch, logs={}):
-        scores = [batch, logs.get('loss'), logs.get('val_loss'), logs.get('acc'), logs.get('val_acc')]
+        scores = [batch, logs.get('loss'), logs.get('val_loss'), logs.get('accuracy'), logs.get('val_accuracy')]
         with open(self.file, mode='a+', newline="",encoding="utf-8") as data_file:
             data_writer = csv.writer(data_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             data_writer.writerow(scores)
@@ -2206,7 +2206,8 @@ class MaskRCNN():
         # Compile
         self.keras_model.compile(
             optimizer=optimizer,
-            loss=[None] * len(self.keras_model.outputs))
+            loss=[None] * len(self.keras_model.outputs),
+            metrics=['accuracy'])
 
         # Add metrics for losses
         for name in loss_names:
