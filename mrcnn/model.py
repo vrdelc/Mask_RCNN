@@ -22,6 +22,7 @@ import keras.backend as K
 import keras.layers as KL
 import keras.engine as KE
 import keras.models as KM
+from keras.callbacks import Callback
 
 from mrcnn import utils
 
@@ -34,6 +35,24 @@ assert LooseVersion(keras.__version__) >= LooseVersion('2.0.8')
 ############################################################
 #  Utility Functions
 ############################################################
+
+class CallbackHistory(Callback):
+    def __init__(self, file):
+        super(CallbackHistory, self).__init__()
+        self.file = folder_path
+        #Create results file
+        data_file = open(self.file, "w", newline="",encoding="utf-8")
+        data_file.close()
+        headers = ['batch', 'train_loss', 'train_acc', 'test_loss', 'test_acc']
+        with open(args.results, mode='a+', newline="",encoding="utf-8") as data_file:
+            data_writer = csv.writer(data_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            data_writer.writerow(headers)
+
+    def on_epoch_end(self, batch, logs={}):
+        scores = [batch, logs.get('loss'), logs.get('val_loss'), logs.get('accuracy'), logs.get('val_accuracy')]
+        with open(self.file, mode='a+', newline="",encoding="utf-8") as data_file:
+            data_writer = csv.writer(data_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            data_writer.writerow(scores)
 
 def log(text, array=None):
     """Prints a text message. And, optionally, if a Numpy array is provided it
@@ -1068,7 +1087,7 @@ def rpn_bbox_loss_graph(config, target_bbox, rpn_match, rpn_bbox):
                                    config.IMAGES_PER_GPU)
 
     loss = smooth_l1_loss(target_bbox, rpn_bbox)
-    
+
     loss = K.switch(tf.size(loss) > 0, K.mean(loss), tf.constant(0.0))
     return loss
 
@@ -2341,6 +2360,7 @@ class MaskRCNN():
                                         histogram_freq=0, write_graph=True, write_images=False),
             keras.callbacks.ModelCheckpoint(self.checkpoint_path,
                                             verbose=0, save_weights_only=True),
+            CallbackHistory(os.path.join(self.log_dir, "metrics.csv"))
         ]
 
         # Add custom callbacks to the list
