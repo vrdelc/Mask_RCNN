@@ -56,7 +56,7 @@ class CallbackHistory(Callback):
 
     def on_epoch_end(self, batch, logs={}):
         #scores = [batch, logs.get('loss'), logs.get('val_loss'), logs.get('accuracy'), logs.get('val_accuracy')]
-        scores = [batch] + [logs.get(value) for value in self.headers]
+        scores = [batch] + [logs.get(value) for value in self.headers[1:]]
         with open(self.file, mode='a+', newline="",encoding="utf-8") as data_file:
             data_writer = csv.writer(data_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             data_writer.writerow(scores)
