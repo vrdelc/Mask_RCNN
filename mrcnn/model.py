@@ -39,7 +39,7 @@ assert LooseVersion(keras.__version__) >= LooseVersion('2.0.8')
 class CallbackHistory(Callback):
     def __init__(self, file):
         super(CallbackHistory, self).__init__()
-        self.file = folder_path
+        self.file = file
         #Create results file
         data_file = open(self.file, "w", newline="",encoding="utf-8")
         data_file.close()
