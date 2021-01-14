@@ -44,7 +44,7 @@ class CallbackHistory(Callback):
         data_file = open(self.file, "w", newline="",encoding="utf-8")
         data_file.close()
         headers = ['batch', 'train_loss', 'train_acc', 'test_loss', 'test_acc']
-        with open(args.results, mode='a+', newline="",encoding="utf-8") as data_file:
+        with open(self.file, mode='a+', newline="",encoding="utf-8") as data_file:
             data_writer = csv.writer(data_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             data_writer.writerow(headers)
 
