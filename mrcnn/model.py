@@ -49,14 +49,14 @@ class CallbackHistory(Callback):
         self.headers = ['epoch', "rpn_class_loss",  "rpn_bbox_loss","mrcnn_class_loss", "mrcnn_bbox_loss", "mrcnn_mask_loss",
             "val_rpn_class_loss",  "val_rpn_bbox_loss","val_mrcnn_class_loss", "val_mrcnn_bbox_loss", "val_mrcnn_mask_loss"]
         """
-        self.headers = ['epoch', 'loss', 'val_loss']
+        self.headers = ['loss', 'val_loss']
         with open(self.file, mode='a+', newline="",encoding="utf-8") as data_file:
             data_writer = csv.writer(data_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            data_writer.writerow(self.headers)
+            data_writer.writerow(['epoch']+self.headers)
 
     def on_epoch_end(self, batch, logs={}):
         #scores = [batch, logs.get('loss'), logs.get('val_loss'), logs.get('accuracy'), logs.get('val_accuracy')]
-        scores = [batch] + [logs.get(value) for value in self.headers[1:]]
+        scores = [batch] + [logs.get(value) for value in self.headers]
         with open(self.file, mode='a+', newline="",encoding="utf-8") as data_file:
             data_writer = csv.writer(data_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             data_writer.writerow(scores)
