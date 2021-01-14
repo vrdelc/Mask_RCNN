@@ -45,8 +45,11 @@ class CallbackHistory(Callback):
         data_file = open(self.file, "w", newline="",encoding="utf-8")
         data_file.close()
         #headers = ['batch', 'train_loss', 'train_acc', 'test_loss', 'test_acc']
+        """
         self.headers = ['epoch', "rpn_class_loss",  "rpn_bbox_loss","mrcnn_class_loss", "mrcnn_bbox_loss", "mrcnn_mask_loss",
             "val_rpn_class_loss",  "val_rpn_bbox_loss","val_mrcnn_class_loss", "val_mrcnn_bbox_loss", "val_mrcnn_mask_loss"]
+        """
+        self.headers = ['epoch', 'loss', val_loss]
         with open(self.file, mode='a+', newline="",encoding="utf-8") as data_file:
             data_writer = csv.writer(data_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             data_writer.writerow(self.headers)
