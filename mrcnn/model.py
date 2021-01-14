@@ -2209,7 +2209,8 @@ class MaskRCNN():
         # Compile
         self.keras_model.compile(
             optimizer=optimizer,
-            loss=[None] * len(self.keras_model.outputs))
+            #loss=[None] * len(self.keras_model.outputs))
+            loss = loss_names)
 
         # Add metrics for losses
         for name in loss_names:
@@ -2766,7 +2767,7 @@ def compose_image_meta(image_id, original_image_shape, image_shape,
         list(original_image_shape) +  # size=3
         list(image_shape) +           # size=3
         list(window) +                # size=4 (y1, x1, y2, x2) in image cooredinates
-        [scale] +                     # size=1
+        #[scale] +                     # size=1
         list(active_class_ids)        # size=num_classes
     )
     return meta
