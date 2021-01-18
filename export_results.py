@@ -1,53 +1,100 @@
+import tensorflow as tf
+import time
+import csv
+import sys
 import os
-import numpy as np
-import pandas as pd
+import collections
+import argparse
 
-from collections import defaultdict
-from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+# Parse command line arguments
+parser = argparse.ArgumentParser(description='Export loss funcions.')
+parser.add_argument('--logs', required=True,
+                    metavar="/path/to/logs/",
+                    help='Directory of the logs')
+parser.add_argument('--file', required=False,
+                    default='metrics.csv',
+                    metavar="<metrics_file>",
+                    help='Metric file (csv)')
+args = parser.parse_args()
 
+# Import the event accumulator from Tensorboard. Location varies between Tensorflow versions. Try each known location until one works.
+eventAccumulatorImported = False;
+# TF version < 1.1.0
+if (not eventAccumulatorImported):
+	try:
+		from tensorflow.python.summary import event_accumulator
+		eventAccumulatorImported = True;
+	except ImportError:
+		eventAccumulatorImported = False;
+# TF version = 1.1.0
+if (not eventAccumulatorImported):
+	try:
+		from tensorflow.tensorboard.backend.event_processing import event_accumulator
+		eventAccumulatorImported = True;
+	except ImportError:
+		eventAccumulatorImported = False;
+# TF version >= 1.3.0
+if (not eventAccumulatorImported):
+	try:
+		from tensorboard.backend.event_processing import event_accumulator
+		eventAccumulatorImported = True;
+	except ImportError:
+		eventAccumulatorImported = False;
+# TF version = Unknown
+if (not eventAccumulatorImported):
+	raise ImportError('Could not locate and import Tensorflow event accumulator.')
 
-def tabulate_events(dpath):
-    summary_iterators = [EventAccumulator(os.path.join(dpath, dname)).Reload() for dname in os.listdir(dpath)]
+class Timer(object):
+	# Source: https://stackoverflow.com/a/5849861
+	def __init__(self, name=None):
+		self.name = name
 
-    tags = summary_iterators[0].Tags()['scalars']
+	def __enter__(self):
+		self.tstart = time.time()
 
-    for it in summary_iterators:
-        assert it.Tags()['scalars'] == tags
+	def __exit__(self, type, value, traceback):
+		if self.name:
+			print('[%s]' % self.name)
+			print('Elapsed: %s' % (time.time() - self.tstart))
 
-    out = defaultdict(list)
-    steps = []
+with Timer():
+	ea = event_accumulator.EventAccumulator(args.logs,
+  	size_guidance={
+      	event_accumulator.COMPRESSED_HISTOGRAMS: 0, # 0 = grab all
+      	event_accumulator.IMAGES: 0,
+      	event_accumulator.AUDIO: 0,
+      	event_accumulator.SCALARS: 0,
+      	event_accumulator.HISTOGRAMS: 0,
+	})
 
-    for tag in tags:
-        steps = [e.step for e in summary_iterators[0].Scalars(tag)]
+with Timer():
+	ea.Reload() # loads events from file
 
-        for events in zip(*[acc.Scalars(tag) for acc in summary_iterators]):
-            assert len(set(e.step for e in events)) == 1
+tags = ea.Tags();
+for t in tags:
+	tagSum = []
+	if (isinstance(tags[t],collections.Sequence)):
+		tagSum = str(len(tags[t])) + ' summaries';
+	else:
+		tagSum = str(tags[t]);
 
-            out[tag].append([e.value for e in events])
+scalarTags = tags['scalars'];
+with Timer():
+	with open(args.file,'w') as csvfile:
+		logWriter = csv.writer(csvfile, delimiter=',');
 
-    return out, steps
+		# Write headers to columns
+		headers = ['wall_time','step'];
+		for s in scalarTags:
+			headers.append(s);
+		logWriter.writerow(headers);
 
-
-def to_csv(dpath):
-    dirs = os.listdir(dpath)
-
-    d, steps = tabulate_events(dpath)
-    tags, values = zip(*d.items())
-    np_values = np.array(values)
-
-    for index, tag in enumerate(tags):
-        df = pd.DataFrame(np_values[index], index=steps, columns=dirs)
-        df.to_csv(get_file_path(dpath, tag))
-
-
-def get_file_path(dpath, tag):
-    file_name = tag.replace("/", "_") + '.csv'
-    folder_path = os.path.join(dpath, 'csv')
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-    return os.path.join(folder_path, file_name)
-
-
-if __name__ == '__main__':
-    path = "path_to_your_summaries"
-    to_csv(path)
+		vals = ea.Scalars(scalarTags[0]);
+		for i in range(len(vals)):
+			v = vals[i];
+			data = [v.wall_time, v.step];
+			for s in scalarTags:
+				scalarTag = ea.Scalars(s);
+				S = scalarTag[i];
+				data.append(S.value);
+			logWriter.writerow(data);
