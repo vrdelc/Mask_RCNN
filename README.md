@@ -2,6 +2,7 @@
 
 Generate a metrics.csv file updated for each epoch
 Can train a coco dataset without a pretrained model
+Include a script to export loss metrics using export_results.py based on [anderskm/exportTensorFlowLog](https://github.com/anderskm/exportTensorFlowLog). Parameters are logs, to determine the folder path, and file, which is optional, to determine the output csv file, by default metrics.csv.
 
 # Mask R-CNN for Object Detection and Segmentation (ORIGINAL)
 
